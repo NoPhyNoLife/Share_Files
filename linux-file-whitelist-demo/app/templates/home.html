@@ -25,6 +25,18 @@
       </section>
       {% endif %}
 
+      {% if upload_success %}
+      <section class="notice success">
+        文件上传成功。网页上传默认仅管理员可见。
+      </section>
+      {% endif %}
+
+      {% if upload_error %}
+      <section class="notice danger">
+        上传失败：{% if upload_error == "invalid_token" %}API Token 无效或已被禁用。{% else %}请稍后重试。{% endif %}
+      </section>
+      {% endif %}
+
       <section class="card">
         <h2>设备白名单申请</h2>
         <form class="grid-form" action="/apply" method="post">
@@ -57,6 +69,28 @@
         <pre><code>curl -X POST http://SERVER:8000/api/upload \
   -H "Authorization: Bearer &lt;API_TOKEN&gt;" \
   -F "file=@/path/to/file.txt"</code></pre>
+      </section>
+
+      <section class="card">
+        <h2>已注册设备网页上传</h2>
+        <p class="lead">适合不方便使用命令行的设备持有人。输入管理员发放的 API Token 后即可上传，网页上传默认仅管理员可见。</p>
+        <form class="grid-form" action="/upload" method="post" enctype="multipart/form-data">
+          <label class="full">
+            <span>API Token</span>
+            <input name="api_token" placeholder="输入审核通过后收到的 Token" required />
+          </label>
+          <label class="full">
+            <span>选择文件</span>
+            <input name="file" type="file" required />
+          </label>
+          <button type="submit">上传文件</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>公开下载页</h2>
+        <p class="lead">匿名访客只能访问公开文件列表，地址为 <code>/downloads</code>。</p>
+        <a class="admin-link" href="/downloads">查看公开文件</a>
       </section>
     </main>
   </body>

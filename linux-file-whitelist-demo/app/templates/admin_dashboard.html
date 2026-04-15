@@ -27,6 +27,30 @@
       </section>
       {% endif %}
 
+      {% if admin_upload_success %}
+      <section class="notice success">
+        管理员上传已完成。公开文件会显示在公共下载页。
+      </section>
+      {% endif %}
+
+      <section class="card">
+        <h2>管理员上传</h2>
+        <form class="grid-form" action="/admin/upload" method="post" enctype="multipart/form-data">
+          <label>
+            <span>可见性</span>
+            <select name="visibility">
+              <option value="admin_only">仅管理员可见</option>
+              <option value="public">全员可见</option>
+            </select>
+          </label>
+          <label>
+            <span>选择文件</span>
+            <input name="file" type="file" required />
+          </label>
+          <button type="submit">上传并保存</button>
+        </form>
+      </section>
+
       <section class="card">
         <h2>申请列表</h2>
         <div class="table-wrap">
@@ -127,26 +151,30 @@
             <thead>
               <tr>
                 <th>时间</th>
+                <th>上传者</th>
                 <th>设备 ID</th>
                 <th>文件名</th>
+                <th>可见性</th>
                 <th>大小</th>
                 <th>来源 IP</th>
-                <th>存储路径</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody>
               {% for upload in uploads %}
               <tr>
                 <td>{{ upload.uploaded_at }}</td>
-                <td><code>{{ upload.device_id }}</code></td>
+                <td>{{ upload.uploader_name }}<br /><small>{{ upload.uploader_role }}</small></td>
+                <td><code>{{ upload.device_id or "-" }}</code></td>
                 <td>{{ upload.filename }}</td>
+                <td><span class="badge {{ 'approved' if upload.visibility == 'public' else 'pending' }}">{{ upload.visibility }}</span></td>
                 <td>{{ upload.size_bytes }}</td>
                 <td>{{ upload.source_ip or "-" }}</td>
-                <td><code>{{ upload.stored_path }}</code></td>
+                <td><a href="/files/{{ upload.id }}">下载</a><br /><small><code>{{ upload.stored_path }}</code></small></td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="6">暂无上传记录</td>
+                <td colspan="8">暂无上传记录</td>
               </tr>
               {% endfor %}
             </tbody>

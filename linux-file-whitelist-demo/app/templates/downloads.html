@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>公开文件下载</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero compact">
+        <div>
+          <p class="eyebrow">Public Downloads</p>
+          <h1>公开文件下载页</h1>
+          <p class="lead">这里仅展示管理员明确设为全员可见的文件。匿名访客可以直接下载。</p>
+        </div>
+        <a class="admin-link" href="/">返回首页</a>
+      </section>
+
+      <section class="card">
+        <h2>文件列表</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>上传时间</th>
+                <th>文件名</th>
+                <th>上传者</th>
+                <th>大小</th>
+                <th>下载</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for upload in uploads %}
+              <tr>
+                <td>{{ upload.uploaded_at }}</td>
+                <td>{{ upload.filename }}</td>
+                <td>{{ upload.uploader_name }}</td>
+                <td>{{ upload.size_bytes }}</td>
+                <td><a href="/files/{{ upload.id }}">下载文件</a></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5">暂时没有公开文件。</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

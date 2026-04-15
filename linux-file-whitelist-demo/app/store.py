@@ -37,6 +37,9 @@ class JsonStore:
         raw = self._read()["uploads"]
         return [UploadRecord.model_validate(item) for item in raw]
 
+    def list_public_uploads(self) -> list[UploadRecord]:
+        return [item for item in self.list_uploads() if item.visibility == "public"]
+
     def create_application(self, application: Application) -> Application:
         data = self._read()
         data["applications"].append(application.model_dump())

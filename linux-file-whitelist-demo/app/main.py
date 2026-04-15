@@ -4,7 +4,7 @@ import secrets
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -54,6 +54,45 @@ def bearer_token(request: Request) -> str | None:
     return None
 
 
+def validate_upload(payload: bytes) -> None:
+    max_bytes = settings.max_upload_mb * 1024 * 1024
+    if len(payload) > max_bytes:
+        raise HTTPException(status_code=413, detail=f"File exceeds {settings.max_upload_mb} MB limit")
+
+
+def persist_upload(
+    *,
+    filename: str,
+    payload: bytes,
+    content_type: str | None,
+    source_ip: str | None,
+    uploader_name: str,
+    uploader_role: str,
+    visibility: str,
+    device_id: str | None = None,
+) -> UploadRecord:
+    safe_name = Path(filename or "upload.bin").name
+    owner_dir_name = device_id or "admin"
+    target_dir = upload_root / owner_dir_name
+    target_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = utc_now().replace(":", "-")
+    stored_path = target_dir / f"{timestamp}__{safe_name}"
+    stored_path.write_bytes(payload)
+    record = UploadRecord(
+        device_id=device_id,
+        uploader_name=uploader_name,
+        uploader_role=uploader_role,
+        filename=safe_name,
+        stored_path=str(stored_path.relative_to(BASE_DIR)),
+        visibility=visibility,
+        content_type=content_type,
+        size_bytes=len(payload),
+        source_ip=source_ip,
+    )
+    store.record_upload(record)
+    return record
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
@@ -62,6 +101,8 @@ async def home(request: Request) -> HTMLResponse:
         context={
             "title": settings.app_name,
             "request_submitted": request.query_params.get("submitted") == "1",
+            "upload_success": request.query_params.get("upload") == "1",
+            "upload_error": request.query_params.get("upload_error"),
         },
     )
 
@@ -124,6 +165,7 @@ async def admin_dashboard(request: Request) -> HTMLResponse:
             "devices": devices,
             "uploads": uploads,
             "token": request.query_params.get("token"),
+            "admin_upload_success": request.query_params.get("admin_upload") == "1",
         },
     )
 
@@ -168,36 +210,97 @@ async def upload_file(request: Request, file: UploadFile = File(...)) -> JSONRes
         raise HTTPException(status_code=403, detail="Invalid or disabled token")
 
     payload = await file.read()
-    max_bytes = settings.max_upload_mb * 1024 * 1024
-    if len(payload) > max_bytes:
-        raise HTTPException(status_code=413, detail=f"File exceeds {settings.max_upload_mb} MB limit")
-
-    safe_name = Path(file.filename or "upload.bin").name
-    device_dir = upload_root / device.id
-    device_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = utc_now().replace(":", "-")
-    target_name = f"{timestamp}__{safe_name}"
-    stored_path = device_dir / target_name
-    stored_path.write_bytes(payload)
-
-    record = UploadRecord(
-        device_id=device.id,
-        filename=safe_name,
-        stored_path=str(stored_path.relative_to(BASE_DIR)),
+    validate_upload(payload)
+    record = persist_upload(
+        filename=file.filename or "upload.bin",
+        payload=payload,
         content_type=file.content_type,
-        size_bytes=len(payload),
         source_ip=client_ip(request),
+        uploader_name=device.name,
+        uploader_role="device",
+        visibility="admin_only",
+        device_id=device.id,
     )
-    store.record_upload(record)
     return JSONResponse(
         {
             "message": "Upload accepted",
             "device_id": device.id,
-            "filename": safe_name,
+            "filename": record.filename,
             "stored_path": record.stored_path,
             "size_bytes": record.size_bytes,
+            "visibility": record.visibility,
         }
     )
+
+
+@app.post("/upload")
+async def upload_from_web(
+    request: Request,
+    api_token: str = Form(...),
+    file: UploadFile = File(...),
+) -> RedirectResponse:
+    device = store.get_device_by_token(api_token.strip())
+    if not device:
+        return RedirectResponse(url="/?upload_error=invalid_token", status_code=303)
+    payload = await file.read()
+    validate_upload(payload)
+    persist_upload(
+        filename=file.filename or "upload.bin",
+        payload=payload,
+        content_type=file.content_type,
+        source_ip=client_ip(request),
+        uploader_name=device.name,
+        uploader_role="device",
+        visibility="admin_only",
+        device_id=device.id,
+    )
+    return RedirectResponse(url="/?upload=1", status_code=303)
+
+
+@app.post("/admin/upload")
+async def admin_upload(
+    request: Request,
+    visibility: str = Form(...),
+    file: UploadFile = File(...),
+) -> RedirectResponse:
+    require_admin(request)
+    if visibility not in {"admin_only", "public"}:
+        raise HTTPException(status_code=400, detail="Invalid visibility")
+    payload = await file.read()
+    validate_upload(payload)
+    persist_upload(
+        filename=file.filename or "upload.bin",
+        payload=payload,
+        content_type=file.content_type,
+        source_ip=client_ip(request),
+        uploader_name="Administrator",
+        uploader_role="admin",
+        visibility=visibility,
+    )
+    return RedirectResponse(url="/admin?admin_upload=1", status_code=303)
+
+
+@app.get("/downloads", response_class=HTMLResponse)
+async def public_downloads(request: Request) -> HTMLResponse:
+    uploads = sorted(store.list_public_uploads(), key=lambda item: item.uploaded_at, reverse=True)
+    return templates.TemplateResponse(
+        request=request,
+        name="downloads.html",
+        context={"uploads": uploads},
+    )
+
+
+@app.get("/files/{upload_id}")
+async def download_file(request: Request, upload_id: str) -> FileResponse:
+    upload = next((item for item in store.list_uploads() if item.id == upload_id), None)
+    if upload is None:
+        raise HTTPException(status_code=404, detail="File not found")
+    if upload.visibility != "public" and not is_admin(request):
+        raise HTTPException(status_code=401, detail="Admin login required")
+    target = (BASE_DIR / upload.stored_path).resolve()
+    if not target.exists():
+        raise HTTPException(status_code=404, detail="Stored file missing")
+    return FileResponse(path=target, filename=upload.filename, media_type=upload.content_type)
 
 
 @app.get("/healthz")
