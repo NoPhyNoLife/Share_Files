@@ -40,6 +40,31 @@ class JsonStore:
     def list_public_uploads(self) -> list[UploadRecord]:
         return [item for item in self.list_uploads() if item.visibility == "public"]
 
+    def list_registered_uploads(self) -> list[UploadRecord]:
+        return [item for item in self.list_uploads() if item.visibility in {"registered", "public"}]
+
+    def get_upload(self, upload_id: str) -> UploadRecord | None:
+        for item in self.list_uploads():
+            if item.id == upload_id:
+                return item
+        return None
+
+    def update_upload(self, upload: UploadRecord) -> UploadRecord:
+        data = self._read()
+        uploads = []
+        found = False
+        for item in data["uploads"]:
+            if item["id"] == upload.id:
+                uploads.append(upload.model_dump())
+                found = True
+            else:
+                uploads.append(item)
+        if not found:
+            raise KeyError("Upload not found")
+        data["uploads"] = uploads
+        self._write(data)
+        return upload
+
     def create_application(self, application: Application) -> Application:
         data = self._read()
         data["applications"].append(application.model_dump())

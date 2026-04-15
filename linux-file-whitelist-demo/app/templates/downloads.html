@@ -12,9 +12,17 @@
         <div>
           <p class="eyebrow">Public Downloads</p>
           <h1>公开文件下载页</h1>
-          <p class="lead">这里仅展示管理员明确设为全员可见的文件。匿名访客可以直接下载。</p>
+          <p class="lead">这里仅展示管理员明确设为公开的文件。匿名访客可以直接下载，注册用户和管理员可从这里跳转到各自空间。</p>
         </div>
-        <a class="admin-link" href="/">返回首页</a>
+        <div class="actions">
+          <a class="admin-link" href="/">返回首页</a>
+          {% if registered_device %}
+          <a class="admin-link" href="/workspace">共享空间</a>
+          {% endif %}
+          {% if is_admin %}
+          <a class="admin-link" href="/admin/files">管理员文件空间</a>
+          {% endif %}
+        </div>
       </section>
 
       <section class="card">

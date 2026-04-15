@@ -13,27 +13,18 @@
           <p class="eyebrow">Linux File Intake</p>
           <h1>白名单设备文件上传服务</h1>
           <p class="lead">
-            设备先在线申请，管理员审核通过后分配 API Token。之后设备即可通过网络上传文件到 Linux 服务器。
+            设备先在线申请，管理员审核通过后分配 API Token。公开访客可浏览公开文件，注册用户登录后进入共享空间，管理员使用独立文件空间管理权限。
           </p>
         </div>
-        <a class="admin-link" href="/admin/login">进入管理后台</a>
+        <div class="actions">
+          <a class="admin-link" href="/workspace/login">注册用户入口</a>
+          <a class="admin-link" href="/admin/login">管理员入口</a>
+        </div>
       </section>
 
       {% if request_submitted %}
       <section class="notice success">
         申请已提交，管理员审核通过后会生成上传 Token。
-      </section>
-      {% endif %}
-
-      {% if upload_success %}
-      <section class="notice success">
-        文件上传成功。网页上传默认仅管理员可见。
-      </section>
-      {% endif %}
-
-      {% if upload_error %}
-      <section class="notice danger">
-        上传失败：{% if upload_error == "invalid_token" %}API Token 无效或已被禁用。{% else %}请稍后重试。{% endif %}
       </section>
       {% endif %}
 
@@ -72,25 +63,60 @@
       </section>
 
       <section class="card">
-        <h2>已注册设备网页上传</h2>
-        <p class="lead">适合不方便使用命令行的设备持有人。输入管理员发放的 API Token 后即可上传，网页上传默认仅管理员可见。</p>
-        <form class="grid-form" action="/upload" method="post" enctype="multipart/form-data">
-          <label class="full">
-            <span>API Token</span>
-            <input name="api_token" placeholder="输入审核通过后收到的 Token" required />
-          </label>
-          <label class="full">
-            <span>选择文件</span>
-            <input name="file" type="file" required />
-          </label>
-          <button type="submit">上传文件</button>
-        </form>
+        <h2>空间说明</h2>
+        <div class="info-grid">
+          <article class="info-box">
+            <h3>公开访客</h3>
+            <p>可在本页申请设备白名单，也可以浏览下方公开文件列表。</p>
+          </article>
+          <article class="info-box">
+            <h3>注册用户</h3>
+            <p>使用 API Token 首次登录后进入共享空间，之后浏览器会通过 cookie 记住状态。</p>
+          </article>
+          <article class="info-box">
+            <h3>管理员</h3>
+            <p>设备审核后台和文件空间分离，文件权限可随时调整为公开、注册用户或仅管理员可见。</p>
+          </article>
+        </div>
       </section>
 
       <section class="card">
-        <h2>公开下载页</h2>
-        <p class="lead">匿名访客只能访问公开文件列表，地址为 <code>/downloads</code>。</p>
-        <a class="admin-link" href="/downloads">查看公开文件</a>
+        <h2>公开文件</h2>
+        <p class="lead">匿名访客可直接下载管理员设为公开的文件。完整公开页也可通过 <code>/downloads</code> 访问。</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>上传时间</th>
+                <th>文件名</th>
+                <th>上传者</th>
+                <th>大小</th>
+                <th>下载</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for upload in public_uploads %}
+              <tr>
+                <td>{{ upload.uploaded_at }}</td>
+                <td>{{ upload.filename }}</td>
+                <td>{{ upload.uploader_name }}</td>
+                <td>{{ upload.size_bytes }}</td>
+                <td><a href="/files/{{ upload.id }}">下载文件</a></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5">暂时没有公开文件。</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="actions top-gap">
+          <a class="admin-link" href="/downloads">查看公开文件页</a>
+          {% if registered_device %}
+          <a class="admin-link" href="/workspace">进入共享空间</a>
+          {% endif %}
+        </div>
       </section>
     </main>
   </body>

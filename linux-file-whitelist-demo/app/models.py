@@ -44,11 +44,11 @@ class Device(BaseModel):
 class UploadRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     device_id: str | None = None
-    uploader_name: str
-    uploader_role: Literal["admin", "device"]
+    uploader_name: str = "Unknown uploader"
+    uploader_role: Literal["admin", "registered", "device"] = "device"
     filename: str
     stored_path: str
-    visibility: Literal["admin_only", "public"] = "admin_only"
+    visibility: Literal["admin_only", "registered", "public"] = "admin_only"
     content_type: str | None = None
     size_bytes: int
     source_ip: str | None = None

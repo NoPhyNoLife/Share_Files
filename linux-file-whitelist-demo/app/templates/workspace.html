@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>注册用户共享空间</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero compact">
+        <div>
+          <p class="eyebrow">Shared Workspace</p>
+          <h1>注册用户共享空间</h1>
+          <p class="lead">已登录用户可在此上传和下载共享文件。你当前的身份来自已审核设备的 API Token 登录态。</p>
+        </div>
+        <div class="actions">
+          <span class="pill">当前用户：{{ registered_device.owner_name }}</span>
+          <form action="/workspace/logout" method="post">
+            <button class="secondary" type="submit">退出共享空间</button>
+          </form>
+        </div>
+      </section>
+
+      {% if upload_success %}
+      <section class="notice success">
+        文件上传成功，当前文件已放入注册用户共享空间。
+      </section>
+      {% endif %}
+
+      <section class="card">
+        <h2>上传共享文件</h2>
+        <form class="grid-form" action="/workspace/upload" method="post" enctype="multipart/form-data">
+          <label class="full">
+            <span>选择文件</span>
+            <input name="file" type="file" required />
+          </label>
+          <button type="submit">上传到共享空间</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>可访问文件</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>上传时间</th>
+                <th>文件名</th>
+                <th>上传者</th>
+                <th>可见度</th>
+                <th>大小</th>
+                <th>下载</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for upload in uploads %}
+              <tr>
+                <td>{{ upload.uploaded_at }}</td>
+                <td>{{ upload.filename }}</td>
+                <td>{{ upload.uploader_name }}</td>
+                <td><span class="badge {{ 'approved' if upload.visibility == 'public' else 'pending' }}">{{ upload.visibility }}</span></td>
+                <td>{{ upload.size_bytes }}</td>
+                <td><a href="/files/{{ upload.id }}">下载文件</a></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6">暂无可访问文件。</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

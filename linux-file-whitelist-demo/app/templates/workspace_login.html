@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>注册用户登录</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="shell narrow">
+      <section class="card">
+        <p class="eyebrow">Workspace Login</p>
+        <h1>注册用户登录</h1>
+        <p class="lead">首次输入一次已审核设备的 API Token，之后浏览器会通过 session cookie 记住登录状态。</p>
+        {% if error %}
+        <p class="notice danger">Token 无效或设备已被禁用。</p>
+        {% endif %}
+        <form class="grid-form" action="/workspace/login" method="post">
+          <label class="full">
+            <span>API Token</span>
+            <input name="api_token" type="password" required />
+          </label>
+          <button type="submit">进入共享空间</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
