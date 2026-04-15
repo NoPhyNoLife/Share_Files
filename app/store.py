@@ -65,6 +65,22 @@ class JsonStore:
         self._write(data)
         return upload
 
+    def delete_upload(self, upload_id: str) -> UploadRecord:
+        data = self._read()
+        removed = None
+        uploads = []
+        for item in data["uploads"]:
+            upload = UploadRecord.model_validate(item)
+            if upload.id == upload_id:
+                removed = upload
+            else:
+                uploads.append(item)
+        if removed is None:
+            raise KeyError("Upload not found")
+        data["uploads"] = uploads
+        self._write(data)
+        return removed
+
     def create_application(self, application: Application) -> Application:
         data = self._read()
         data["applications"].append(application.model_dump())

@@ -263,6 +263,7 @@ async def admin_files_dashboard(request: Request) -> HTMLResponse:
         context={
             "uploads": uploads,
             "admin_upload_success": request.query_params.get("admin_upload") == "1",
+            "delete_success": request.query_params.get("deleted") == "1",
         },
     )
 
@@ -368,6 +369,19 @@ async def update_file_visibility(
     upload.visibility = visibility  # type: ignore[assignment]
     store.update_upload(upload)
     return RedirectResponse(url="/admin/files", status_code=303)
+
+
+@app.post("/admin/files/{upload_id}/delete")
+async def delete_file(request: Request, upload_id: str) -> RedirectResponse:
+    require_admin(request)
+    upload = store.get_upload(upload_id)
+    if upload is None:
+        raise HTTPException(status_code=404, detail="Upload not found")
+    target = (BASE_DIR / upload.stored_path).resolve()
+    if target.exists():
+        target.unlink()
+    store.delete_upload(upload_id)
+    return RedirectResponse(url="/admin/files?deleted=1", status_code=303)
 
 
 @app.get("/downloads", response_class=HTMLResponse)

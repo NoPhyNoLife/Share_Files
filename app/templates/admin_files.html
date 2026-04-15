@@ -28,6 +28,12 @@
       </section>
       {% endif %}
 
+      {% if delete_success %}
+      <section class="notice success">
+        文件已删除。
+      </section>
+      {% endif %}
+
       <section class="card">
         <h2>管理员上传</h2>
         <form class="grid-form" action="/admin/upload" method="post" enctype="multipart/form-data">
@@ -62,6 +68,7 @@
                 <th>来源 IP</th>
                 <th>下载</th>
                 <th>权限调整</th>
+                <th>删除</th>
               </tr>
             </thead>
             <tbody>
@@ -85,10 +92,15 @@
                     <button type="submit">更新</button>
                   </form>
                 </td>
+                <td>
+                  <form action="/admin/files/{{ upload.id }}/delete" method="post">
+                    <button class="secondary" type="submit">删除</button>
+                  </form>
+                </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="9">暂无上传记录</td>
+                <td colspan="10">暂无上传记录</td>
               </tr>
               {% endfor %}
             </tbody>
