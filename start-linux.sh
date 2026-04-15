@@ -17,4 +17,13 @@ if [ -f ".env" ]; then
   set +a
 fi
 
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+if [ "${START_PORT:-auto}" = "auto" ]; then
+  APP_PORT="$(python3 -c 'import socket; s = socket.socket(); s.bind(("0.0.0.0", 0)); print(s.getsockname()[1]); s.close()')"
+else
+  APP_PORT="${START_PORT}"
+fi
+
+echo "Starting service on port ${APP_PORT}"
+echo "Open: http://localhost:${APP_PORT}"
+
+exec uvicorn app.main:app --host 0.0.0.0 --port "$APP_PORT"

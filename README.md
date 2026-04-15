@@ -46,14 +46,17 @@ cp .env.example .env
 bash start-linux.sh
 ```
 
+如果 `.env` 里的 `START_PORT=auto`，脚本会自动选择一个当前空闲端口并在启动时打印访问地址。
+如果你想固定脚本启动端口，可以把 `START_PORT` 改成例如 `8000`、`8080` 等。
+
 打开：
 
-- 公开主页: `http://localhost:8000/`
-- 注册用户共享空间: `http://localhost:8000/workspace`
-- 注册用户登录: `http://localhost:8000/workspace/login`
-- 设备审核后台: `http://localhost:8000/admin/login`
-- 管理员文件空间: `http://localhost:8000/admin/files`
-- 公开下载页: `http://localhost:8000/downloads`
+- 公开主页: `http://localhost:<APP_PORT>/`
+- 注册用户共享空间: `http://localhost:<APP_PORT>/workspace`
+- 注册用户登录: `http://localhost:<APP_PORT>/workspace/login`
+- 设备审核后台: `http://localhost:<APP_PORT>/admin/login`
+- 管理员文件空间: `http://localhost:<APP_PORT>/admin/files`
+- 公开下载页: `http://localhost:<APP_PORT>/downloads`
 
 默认管理员密码来自环境变量 `ADMIN_PASSWORD`。
 
@@ -72,7 +75,17 @@ docker compose up --build
 ```env
 ADMIN_PASSWORD=your-admin-password
 SESSION_SECRET=your-random-session-secret
+START_PORT=auto
+APP_PORT=8000
+HOST_PORT=8000
 ```
+
+说明：
+
+- `START_PORT` 是 `start-linux.sh` 使用的启动端口，支持 `auto`
+- `APP_PORT` 是容器内服务监听端口
+- `HOST_PORT` 是宿主机暴露给浏览器或局域网访问的端口
+- Docker/Compose 默认建议固定端口，便于你告诉别人连接地址
 
 ## 集成接口
 
@@ -102,7 +115,7 @@ curl -X POST http://localhost:8000/api/upload \
 
 ## 如何把地址告诉别人
 
-假设你的 Linux 服务器 IP 是 `192.168.1.20`，那么可以这样分发入口：
+假设你的 Linux 服务器 IP 是 `192.168.1.20`，宿主机端口是 `8000`，那么可以这样分发入口：
 
 - 白名单申请页: `http://192.168.1.20:8000/`
 - 共享空间: `http://192.168.1.20:8000/workspace`
