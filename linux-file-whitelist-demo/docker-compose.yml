@@ -1,0 +1,14 @@
+services:
+  whitelist-upload:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret}
+      DATA_FILE: data/db.json
+      UPLOAD_DIR: uploads
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+    volumes:
+      - ./data:/service/data
+      - ./uploads:/service/uploads

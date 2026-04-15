@@ -1,0 +1,16 @@
+# Local Python virtual environment
+.venv/
+
+# Python bytecode and cache files
+__pycache__/
+*.pyc
+
+# Local runtime configuration containing secrets
+.env
+
+# Demo runtime data store
+data/db.json
+
+# Uploaded files are runtime artifacts; keep only the placeholder file
+uploads/*
+!uploads/.gitkeep

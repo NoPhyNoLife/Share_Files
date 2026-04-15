@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Linux File Intake</p>
+          <h1>白名单设备文件上传服务</h1>
+          <p class="lead">
+            设备先在线申请，管理员审核通过后分配 API Token。之后设备即可通过网络上传文件到 Linux 服务器。
+          </p>
+        </div>
+        <a class="admin-link" href="/admin/login">进入管理后台</a>
+      </section>
+
+      {% if request_submitted %}
+      <section class="notice success">
+        申请已提交，管理员审核通过后会生成上传 Token。
+      </section>
+      {% endif %}
+
+      <section class="card">
+        <h2>设备白名单申请</h2>
+        <form class="grid-form" action="/apply" method="post">
+          <label>
+            <span>设备名称</span>
+            <input name="device_name" placeholder="例如：Scanner-01" required />
+          </label>
+          <label>
+            <span>申请人</span>
+            <input name="owner_name" placeholder="例如：Alice" required />
+          </label>
+          <label>
+            <span>联系方式</span>
+            <input name="contact" placeholder="邮箱 / 电话 / IM" required />
+          </label>
+          <label>
+            <span>设备说明</span>
+            <input name="device_description" placeholder="系统版本、用途、部署位置" />
+          </label>
+          <label class="full">
+            <span>备注</span>
+            <textarea name="note" rows="4" placeholder="补充说明、预计上传文件类型等"></textarea>
+          </label>
+          <button type="submit">提交申请</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>上传接口说明</h2>
+        <pre><code>curl -X POST http://SERVER:8000/api/upload \
+  -H "Authorization: Bearer &lt;API_TOKEN&gt;" \
+  -F "file=@/path/to/file.txt"</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

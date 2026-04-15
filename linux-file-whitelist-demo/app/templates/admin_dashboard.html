@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理后台</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero compact">
+        <div>
+          <p class="eyebrow">Admin Console</p>
+          <h1>白名单审核后台</h1>
+          <p class="lead">审核申请、下发 Token、查看上传记录、禁用设备。</p>
+        </div>
+        <form action="/admin/logout" method="post">
+          <button class="secondary" type="submit">退出登录</button>
+        </form>
+      </section>
+
+      {% if token %}
+      <section class="notice success">
+        <strong>新生成的 API Token：</strong>
+        <code>{{ token }}</code>
+        <div>请立即复制并安全发给设备持有人。页面只会在审批后跳转时展示完整 token。</div>
+      </section>
+      {% endif %}
+
+      <section class="card">
+        <h2>申请列表</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>设备</th>
+                <th>申请人</th>
+                <th>联系</th>
+                <th>状态</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in applications %}
+              <tr>
+                <td>{{ item.created_at }}</td>
+                <td>{{ item.device_name }}<br /><small>{{ item.device_description }}</small></td>
+                <td>{{ item.owner_name }}</td>
+                <td>{{ item.contact }}</td>
+                <td><span class="badge {{ item.status }}">{{ item.status }}</span></td>
+                <td>{{ item.note or item.review_note or "-" }}</td>
+                <td>
+                  {% if item.status == "pending" %}
+                  <form action="/admin/applications/{{ item.id }}/approve" method="post" class="inline-form">
+                    <input name="review_note" placeholder="审批备注（可选）" />
+                    <button type="submit">通过</button>
+                  </form>
+                  <form action="/admin/applications/{{ item.id }}/reject" method="post" class="inline-form">
+                    <input name="review_note" placeholder="驳回原因（可选）" />
+                    <button class="secondary" type="submit">驳回</button>
+                  </form>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7">暂无申请</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>设备列表</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>设备 ID</th>
+                <th>设备名</th>
+                <th>持有人</th>
+                <th>Token 预览</th>
+                <th>最后上传</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for device in devices %}
+              <tr>
+                <td><code>{{ device.id }}</code></td>
+                <td>{{ device.name }}</td>
+                <td>{{ device.owner_name }}</td>
+                <td><code>{{ device.token_preview }}</code></td>
+                <td>{{ device.last_upload_at or "-" }}<br /><small>{{ device.last_upload_ip or "" }}</small></td>
+                <td><span class="badge {{ 'approved' if device.enabled else 'rejected' }}">{{ 'enabled' if device.enabled else 'disabled' }}</span></td>
+                <td>
+                  {% if device.enabled %}
+                  <form action="/admin/devices/{{ device.id }}/disable" method="post">
+                    <button class="secondary" type="submit">禁用</button>
+                  </form>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7">暂无设备</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>最近上传</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>设备 ID</th>
+                <th>文件名</th>
+                <th>大小</th>
+                <th>来源 IP</th>
+                <th>存储路径</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for upload in uploads %}
+              <tr>
+                <td>{{ upload.uploaded_at }}</td>
+                <td><code>{{ upload.device_id }}</code></td>
+                <td>{{ upload.filename }}</td>
+                <td>{{ upload.size_bytes }}</td>
+                <td>{{ upload.source_ip or "-" }}</td>
+                <td><code>{{ upload.stored_path }}</code></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6">暂无上传记录</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
