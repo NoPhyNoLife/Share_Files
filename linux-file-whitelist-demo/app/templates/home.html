@@ -13,11 +13,11 @@
           <p class="eyebrow">Linux File Intake</p>
           <h1>白名单设备文件上传服务</h1>
           <p class="lead">
-            设备先在线申请，管理员审核通过后分配 API Token。公开访客可浏览公开文件，注册用户登录后进入共享空间，管理员使用独立文件空间管理权限。
+            设备先在线申请，管理员审核通过后开通注册用户访问。公开访客可浏览公开文件，注册用户登录后进入共享空间，管理员使用独立文件空间管理权限。
           </p>
         </div>
         <div class="actions">
-          <a class="admin-link" href="/workspace/login">注册用户入口</a>
+          <a class="admin-link" href="/workspace">注册用户入口</a>
           <a class="admin-link" href="/admin/login">管理员入口</a>
         </div>
       </section>
@@ -56,13 +56,6 @@
       </section>
 
       <section class="card">
-        <h2>上传接口说明</h2>
-        <pre><code>curl -X POST http://SERVER:8000/api/upload \
-  -H "Authorization: Bearer &lt;API_TOKEN&gt;" \
-  -F "file=@/path/to/file.txt"</code></pre>
-      </section>
-
-      <section class="card">
         <h2>空间说明</h2>
         <div class="info-grid">
           <article class="info-box">
@@ -71,7 +64,7 @@
           </article>
           <article class="info-box">
             <h3>注册用户</h3>
-            <p>使用 API Token 首次登录后进入共享空间，之后浏览器会通过 cookie 记住状态。</p>
+            <p>从共享空间入口进入；如果尚未登录，系统会自动跳转到登录页。首次验证后浏览器会通过 cookie 记住状态。</p>
           </article>
           <article class="info-box">
             <h3>管理员</h3>

@@ -4,8 +4,7 @@
 
 - 用户可通过网页提交设备白名单申请
 - 管理员可在网页后台审核申请
-- 审核通过后系统生成设备 `API Token`
-- 设备程序可继续携带 Token 通过 API 上传
+- 审核通过后系统生成设备 `API Token`，需要管理员通过其他联系方式发送给对应用户
 - 注册用户首次使用 Token 登录一次，之后通过 session cookie 进入共享空间
 - 管理员文件空间与设备审核后台分离
 - 每个文件可在 `public / registered / admin_only` 三种可见度之间切换
@@ -32,19 +31,26 @@ linux-file-whitelist-demo/
 └── README.md
 ```
 
-## 本地运行
+## 本地运行服务器
 
 ```bash
-cd /Users/robertgalvan/Documents/VibeCoding/Codexproject/linux-file-whitelist-demo
+cd ./linux-file-whitelist-demo
 cp .env.example .env
+```
+
+然后，进入.env设置管理员密码等参数
+
+准备好后，运行服务器：
+
+```bash
 bash start-linux.sh
 ```
 
 打开：
 
 - 公开主页: `http://localhost:8000/`
-- 注册用户登录: `http://localhost:8000/workspace/login`
 - 注册用户共享空间: `http://localhost:8000/workspace`
+- 注册用户登录: `http://localhost:8000/workspace/login`
 - 设备审核后台: `http://localhost:8000/admin/login`
 - 管理员文件空间: `http://localhost:8000/admin/files`
 - 公开下载页: `http://localhost:8000/downloads`
@@ -56,7 +62,7 @@ bash start-linux.sh
 ## Docker 运行
 
 ```bash
-cd /Users/robertgalvan/Documents/VibeCoding/Codexproject/linux-file-whitelist-demo
+cd ./linux-file-whitelist-demo
 cp .env.example .env
 docker compose up --build
 ```
@@ -68,7 +74,11 @@ ADMIN_PASSWORD=your-admin-password
 SESSION_SECRET=your-random-session-secret
 ```
 
-## 上传接口
+## 集成接口
+
+普通人类用户默认使用网页空间，不需要直接接触 API。
+
+如果后续仍需要保留给脚本或自动化程序的上传入口，可使用：
 
 ```bash
 curl -X POST http://localhost:8000/api/upload \
@@ -88,7 +98,6 @@ curl -X POST http://localhost:8000/api/upload \
 
 - 匿名访客: 可访问首页和公开下载页，只能下载 `public` 文件
 - 注册用户: 首次用 API Token 登录一次后，浏览器通过 session cookie 保持登录，可进入共享空间上传和下载 `registered/public` 文件
-- 设备程序: 继续通过 API Token 访问 `/api/upload`，默认上传为 `admin_only`
 - 管理员: 审核设备申请、管理全部文件、实时调整每个文件的可见度
 
 ## 如何把地址告诉别人
@@ -96,17 +105,11 @@ curl -X POST http://localhost:8000/api/upload \
 假设你的 Linux 服务器 IP 是 `192.168.1.20`，那么可以这样分发入口：
 
 - 白名单申请页: `http://192.168.1.20:8000/`
-- 注册用户登录: `http://192.168.1.20:8000/workspace/login`
 - 共享空间: `http://192.168.1.20:8000/workspace`
+- 注册用户登录: `http://192.168.1.20:8000/workspace/login`
 - 管理后台: `http://192.168.1.20:8000/admin/login`
 - 管理员文件空间: `http://192.168.1.20:8000/admin/files`
 - 公开下载页: `http://192.168.1.20:8000/downloads`
-
-设备 API 上传地址：
-
-```bash
-http://192.168.1.20:8000/api/upload
-```
 
 注意：
 

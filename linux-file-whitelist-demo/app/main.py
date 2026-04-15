@@ -203,7 +203,10 @@ async def admin_index() -> RedirectResponse:
 
 @app.get("/workspace", response_class=HTMLResponse)
 async def workspace_home(request: Request) -> HTMLResponse:
-    device = require_registered_user(request)
+    device = current_registered_device(request)
+    if device is None or not device.enabled:
+        request.session.pop("registered_device_id", None)
+        return RedirectResponse(url="/workspace/login", status_code=303)
     uploads = sorted(store.list_registered_uploads(), key=lambda item: item.uploaded_at, reverse=True)
     return templates.TemplateResponse(
         request=request,
